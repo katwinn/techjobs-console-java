@@ -10,6 +10,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by LaunchCode
@@ -18,8 +19,7 @@ public class JobData {
 
     private static final String DATA_FILE = "resources/job_data.csv";
     private static Boolean isDataLoaded = false;
-
-    private static ArrayList<HashMap<String, String>> allJobs;
+    public static ArrayList<HashMap<String, String>> allJobs;
 
     /**
      * Fetch list of all values from loaded data,
@@ -28,9 +28,10 @@ public class JobData {
      * @param field The column to retrieve values from
      * @return List of all of the values of the given field
      */
+
     public static ArrayList<String> findAll(String field) {
 
-        // load data, if not already loaded
+
         loadData();
 
         ArrayList<String> values = new ArrayList<>();
@@ -48,7 +49,7 @@ public class JobData {
 
     public static ArrayList<HashMap<String, String>> findAll() {
 
-        // load data, if not already loaded
+
         loadData();
 
         return allJobs;
@@ -57,24 +58,26 @@ public class JobData {
     /**
      * Returns results of search the jobs data by key/value, using
      * inclusion of the search term.
-     *
+     * <p>
      * For example, searching for employer "Enterprise" will include results
      * with "Enterprise Holdings, Inc".
      *
-     * @param column   Column that should be searched.
-     * @param value Value of teh field to search for
+     * @param column Column that should be searched.
+     * @param value  Value of teh field to search for
      * @return List of all jobs matching the criteria
      */
     public static ArrayList<HashMap<String, String>> findByColumnAndValue(String column, String value) {
 
-        // load data, if not already loaded
+
         loadData();
+
 
         ArrayList<HashMap<String, String>> jobs = new ArrayList<>();
 
         for (HashMap<String, String> row : allJobs) {
 
-            String aValue = row.get(column);
+            String original_value = row.get(column);
+            String aValue = original_value.toLowerCase();
 
             if (aValue.contains(value)) {
                 jobs.add(row);
@@ -84,19 +87,46 @@ public class JobData {
         return jobs;
     }
 
+    public static ArrayList<HashMap<String, String>> findByValue(String searchTerm) {
+
+
+        loadData();
+
+
+        ArrayList<HashMap<String, String>> jobs = new ArrayList<>();
+
+
+        for (HashMap<String, String> job : allJobs) {
+            Boolean containsTerm = false;
+            for (Map.Entry<String, String> row : job.entrySet()) {
+                String original_value = row.getValue();
+                String value = original_value.toLowerCase();
+                if (value.contains(searchTerm)) {
+                    containsTerm = true;
+                    break;
+                }
+            }
+            if (containsTerm == true) {
+                jobs.add(job);
+            }
+        }
+        return jobs;
+    }
+
+
     /**
      * Read in data from a CSV file and store it in a list
      */
-    private static void loadData() {
+    public static void loadData() {
 
-        // Only load data once
+
         if (isDataLoaded) {
             return;
         }
 
         try {
 
-            // Open the CSV file and set up pull out column header info and records
+
             Reader in = new FileReader(DATA_FILE);
             CSVParser parser = CSVFormat.RFC4180.withFirstRecordAsHeader().parse(in);
             List<CSVRecord> records = parser.getRecords();
@@ -105,7 +135,7 @@ public class JobData {
 
             allJobs = new ArrayList<>();
 
-            // Put the records into a more friendly format
+
             for (CSVRecord record : records) {
                 HashMap<String, String> newJob = new HashMap<>();
 
@@ -116,7 +146,7 @@ public class JobData {
                 allJobs.add(newJob);
             }
 
-            // flag the data as loaded, so we don't do it twice
+
             isDataLoaded = true;
 
         } catch (IOException e) {
@@ -124,5 +154,4 @@ public class JobData {
             e.printStackTrace();
         }
     }
-
 }
